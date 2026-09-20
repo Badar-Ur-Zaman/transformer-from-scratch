@@ -121,28 +121,3 @@ tensorboard --logdir runs
 ```
 
 Then open the address printed by TensorBoard, usually `http://localhost:6006`.
-
-## Important sequence-length note
-
-The current configuration uses `seq_len = 350`, but the example training output reports source and target sequences as long as 471 and 482 tokens. If one of those long examples is loaded, `BilingualDataset` will raise a `ValueError` because it cannot fit the example into 350 positions.
-
-To complete training reliably, either increase `seq_len` to at least 483 (to leave room for the required special tokens) or filter/truncate examples longer than the chosen sequence length. Increasing it also raises memory use and makes training slower.
-
-## Understanding the shown training log
-
-The training process **did start**, because:
-
-- the dataset downloaded and its training split was created
-- both tokenizers were prepared
-- the model reached epoch 0
-- a first loss value (`10.320`) was calculated
-
-However, the startup was **not completely clean**:
-
-- The repeated TensorBoard `MessageFactory`/`GetPrototype` errors suggest incompatible `tensorboard` and `protobuf` package versions. They did not stop this run, but TensorBoard logging may not work correctly. Updating the related packages in the same virtual environment is recommended.
-- `Using device: cpu` means training will work, but a full Transformer with this dataset can be very slow.
-- The Hugging Face authentication message is only a rate-limit warning; a token is optional for this public dataset.
-- The oneDNN lines are informational messages, not failures.
-- Most importantly, `seq_len = 350` is shorter than some dataset examples, so the run may fail later unless long examples are handled.
-
-The loss `10.320` is not unusual for the very first batch of a newly initialized model. The useful sign is whether the average loss generally decreases over many batches and epochs.
